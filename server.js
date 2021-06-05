@@ -21,7 +21,7 @@ mongoose.connect(uri, {
 }, (err, success) => {
     if (err) throw new err
 
-    server.listen(port, () => {
+    server.listen(PORT, () => {
         console.log(`Washup app is running successfully in ${PORT} and connected to database`)
     })
 }
