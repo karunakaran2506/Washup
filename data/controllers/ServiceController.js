@@ -100,6 +100,32 @@ const ViewService = async function (req, res) {
 
 }
 
+const ViewAllServices = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+        // main code
+        try {
+            let viewservice = await Service.find({})
+            resolve({ success: true, message: 'Success message', service: viewservice })
+        } catch (error) {
+            reject({ success: false, message: 'Failure message', error: error.message })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message, service: data.service });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message, error: error.error });
+        })
+
+}
+
 const UpdateService = async function (req, res) {
 
     const promise = new Promise(async function (resolve, reject) {
@@ -160,5 +186,6 @@ module.exports = {
     uploadImg,
     AddService,
     ViewService,
-    UpdateService
+    UpdateService,
+    ViewAllServices
 }

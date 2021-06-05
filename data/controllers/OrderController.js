@@ -7,6 +7,7 @@ const secret = 'washup123';
 const axios = require('axios');
 const Cartitem = require('../models/cartitems');
 const Setting = require('./../models/settings');
+const CurrentMembership = require('../models/currentmembership');
 
 const CreateOrder = async function (req, res) {
 
@@ -20,6 +21,8 @@ const CreateOrder = async function (req, res) {
                 try {
 
                     // let findSetting = await Setting.find();
+
+                    var remaining;
 
                     subtotal = 0;
 
@@ -38,7 +41,7 @@ const CreateOrder = async function (req, res) {
                     let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
                     let orderid = 'WUORD' + otp;
 
-                    if (req.body.paymentmode == 'cashondelivery') {
+                    if (req.body.paymentmode == 'cashondelivery' || req.body.paymentmode == 'membership') {
 
                         let createorder = await Orders.create({
                             orderid: orderid,
@@ -53,6 +56,22 @@ const CreateOrder = async function (req, res) {
                             orderstatus: 'Placed',
                             isactive: true
                         })
+                        
+                        if(req.body.paymentmode == 'membership'){
+
+                            let findBalance = await CurrentMembership.findOne({ customer : customerId.id });
+
+                            remaining = findBalance.balance - totalamount;
+                            let updatebalance = await CurrentMembership.updateOne({ _id: findBalance.id }, {
+                                $set: {
+                                    balance: remaining
+                                }
+                            })
+                                .then((data) => {
+                                    console.log('Balance has been updated')
+                                })
+                        }
+
 
                         let updateCart = await CartId.updateOne({ _id: req.body.cartid }, {
                             $set: {
@@ -154,27 +173,13 @@ const razorpay = async function (req, res) {
         try {
             if (isValidParams) {
                 let customerId = await jwt.verify(req.headers.token, secret)
-                console.log('customerId', customerId)
+                
                 let checkCustomers = await Customers.find({ _id: customerId.id })
                 if (checkCustomers) {
 
-                    let findSetting = await Setting.find();
-
-                    subtotal = 0;
-
-                    subcharges = findSetting[0].packaging_charge + findSetting[0].delivery_charge + findSetting[0].extra_charge;
-
-                    let findCartItems = await Cartitem.find({ cartid: req.body.cartid })
-
-                    for (let x = 0; x < findCartItems.length; x++) {
-                        subtotal = subtotal + findCartItems[x].totalamount;
-                    }
-
-                    let totalamount = +subtotal + +subcharges;
-
-                    var amount = totalamount * 100;
-                    var username = "rzp_test_AK9dlnT7OKZfAy";
-                    var password = "TE5oj7nS0P7BzK8P4gnGIfn2";
+                    var amount = req.body.amount * 100;
+                    var username = "rzp_test_MwvqBORSfCaaxV";
+                    var password = "19TcZpoeCWFQoFgvbRIA4bBu";
                     var url = "https://api.razorpay.com/v1/orders?amount=" + amount + "&currency=INR&receipt=order_rcptid_11&payment_capture=1";
 
                     const result = await axios.post(url, {}, {
@@ -206,11 +211,9 @@ const razorpay = async function (req, res) {
 
     promise.
         then(function (data) {
-            console.log('Inside then')
             res.send({ success: data.success, razorpay: data.razorpay });
 
         }).catch(function (error) {
-            console.log('Inside catch', error)
             res.send({ success: error ? error.success : false, message: error ? error.message : 'Error occured while getting razorpay' });
         });
 }
@@ -453,11 +456,151 @@ const ListOrdersbyCustomer = async function (req, res) {
 
 }
 
+const ListAllOrders = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token;
+
+        if (ValidParams) {
+            try {
+                let adminId = jwt.verify(req.headers.token, secret);
+
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+
+                if (checkAdmin) {
+                    try {
+
+                        let findOrders = await Orders.find({ }).populate('customer','name').sort({ createdat: -1 })
+
+                        resolve({ success: true, message: 'Success message', orders: findOrders })
+
+                    }
+                    catch (error) {
+                        reject({ success: false, message: 'Error message' })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No vendor found' })
+                }
+            }
+            catch {
+                reject({ success: false, message: 'Invalid token found', orders: data.orders })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid token' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message, orders: data.orders });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message });
+        })
+
+}
+
+const OrderDetail = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token;
+
+        if (ValidParams) {
+            try {
+
+                var result;
+
+                let adminId = jwt.verify(req.headers.token, secret);
+
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+
+                if (checkAdmin) {
+                    try {
+
+                        let findOrders = await Orders.findOne({ orderid : req.body.orderid}).populate('customer')
+
+                        .then(async(data)=>{
+                        console.log('data',data);
+                        
+                        let cartitem = await Cartitem.find({cartid : data.cartid}).populate({
+                            path : 'product',
+                            select : 'name',
+                            populate : {
+                                select : 'name',
+                                path : 'service'
+                            }
+                        })
+
+                        result = {
+                            order : {
+                                orderid : data.orderid,
+                                orderstatus : data.orderstatus,
+                                createdat : data.createdat
+                            },
+                            cartitems : cartitem,
+                            customer : data.customer,
+                            payment : {
+                                paymentmode : data.paymentmode,
+                                paymentstatus : data.paymentstatus,
+                                totalamount : data.totalamount,
+                                subtotal : data.subtotal,
+                                razorpay_payment_id : data.razorpay_payment_id,
+                                razorpay_signature : data.razorpay_signature,
+                                razorpay_order_id : data.razorpay_order_id
+                            }
+                         }
+
+                        })
+
+                        resolve({ success: true, message: 'Success message', result: result })
+
+                    }
+                    catch (error) {
+                        reject({ success: false, message: error.message })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No vendor found' })
+                }
+            }
+            catch(error) {
+                reject({ success: false, message: error.message })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid token' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message, result: data.result });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure',error);
+            res.send({ success: error.success, message: error.message });
+        })
+
+}
+
 module.exports = {
     CreateOrder,
     razorpay,
     UpdateOrder,
     CustomerViewOrderDetails,
     updatePayment,
-    ListOrdersbyCustomer
+    ListOrdersbyCustomer,
+    ListAllOrders,
+    OrderDetail
 }

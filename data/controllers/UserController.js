@@ -718,6 +718,102 @@ const verifysignupOtp = async function (req, res) {
 
 }
 
+const getUserdetail = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token;
+
+        if (ValidParams) {
+            try {
+                let customerId = jwt.verify(req.headers.token, secret)
+
+                let checkCustomer = await Customers.findOne({ _id: customerId.id })
+
+                if (checkCustomer) {
+                    try {
+                        let userdetail = await Customers.findOne({ _id: customerId.id });
+                        resolve({ success: true, message: 'Success message', data: userdetail })
+
+                    } catch (error) {
+                        reject({ success: false, message: 'Failure message', error: error.message })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No customer found' })
+                }
+            }
+            catch {
+                reject({ success: false, message: 'Invalid token found' })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid token' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message, data: data.data });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message, error: error.error });
+        })
+
+}
+
+const Editprofile = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+    let ValidParams = req.headers.token;
+
+        if (ValidParams) {
+        try {
+
+                let customerId = jwt.verify(req.headers.token, secret)
+
+                let editUser = await Customers.updateOne({_id:customerId.id},{
+                $set : {
+                    name: req.body.name,
+                    email: req.body.email,
+                    customertypeinfo1: req.body.customertypeinfo1,
+                    customertypeinfo2: req.body.customertypeinfo2,
+                    customertype: req.body.customertype,
+                    phone: req.body.phone
+                }
+                })
+
+                resolve({ success: true, message: 'User details edited successfully' })
+
+        } catch (error) {
+            reject({ success: false, message: 'Error while editing profile', error: error.message })
+        }
+        }
+
+        else {
+            reject({ success: false, message: 'No valid token' })
+        }
+
+    });
+
+    promise
+
+        .then(function (data) {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message });
+        })
+        .catch(function (error) {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message });
+        })
+
+}
+
 module.exports = {
     UserLogin,
     UserSignUp,
@@ -731,5 +827,7 @@ module.exports = {
     sendnotificationtouser,
     saveplayerid,
     sendSignupOtp,
-    verifysignupOtp
+    verifysignupOtp,
+    getUserdetail,
+    Editprofile
 };

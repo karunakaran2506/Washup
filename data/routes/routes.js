@@ -11,6 +11,7 @@ const ProductController = require('../controllers/ProductController');
 const CartController = require('../controllers/CartController');
 const OrderController = require('../controllers/OrderController');
 const FaqController = require('../controllers/FaqController');
+const MembershipController = require('../controllers/MembershipController');
 
 //Customer Controller Functions
 router.post('/customersignup',CustomerController.UserSignUp);
@@ -26,6 +27,8 @@ router.post('/sendnotificationtoall',CustomerController.sendnotificationtoall);
 router.post('/saveplayerid',CustomerController.saveplayerid); 
 router.post('/sendsignupotp',CustomerController.sendSignupOtp); 
 router.post('/verifysignupotp',CustomerController.verifysignupOtp); 
+router.get('/getuserdetail', CustomerController.getUserdetail);
+router.post('/editprofile',CustomerController.Editprofile)
 
 //Admin Controller Functions
 router.post('/adminsignup',AdminController.adminSignup); 
@@ -38,8 +41,8 @@ router.post('/addstaff', StaffController.AddStaff);
 router.post('/viewstaff', StaffController.ViewStaff);
 
 //banner
-router.post('/addBanner', BannerController.uploadImg, BannerController.addBanner);
-router.post('/deleteBanner', BannerController.deleteBanner); 
+router.post('/addbanner', BannerController.uploadImg, BannerController.addBanner);
+router.post('/deletebanner', BannerController.deleteBanner); 
 router.get('/viewbanners', BannerController.viewBanners);
 
 //Sub-banner
@@ -56,17 +59,18 @@ router.get('/getsettings', SettingController.Getsettings);
 
 router.post('/addservice',ServiceController.uploadImg, ServiceController.AddService);
 router.get('/viewservice', ServiceController.ViewService);
+router.get('/viewallservices', ServiceController.ViewAllServices);
 router.post('/updateservice', ServiceController.UpdateService);
 
 // Product Controller functions
 
-router.post('/addproduct',ProductController.uploadImg, ProductController.AddProduct);
 router.post('/viewproductbyservice', ProductController.ViewProduct);
 router.post('/viewproductbyservice2', ProductController.ViewProduct2);
 router.post('/updateproduct', ProductController.UpdateProduct);
 
 // Product Controller functions for Admin
-
+router.post('/addproduct',ProductController.uploadImg, ProductController.AddProduct);
+router.post('/updateproduct', ProductController.UpdateProduct);
 router.get('/viewallproducts',ProductController.ViewAllProducts)
 
 // Cart Controller Functions
@@ -82,6 +86,8 @@ router.post('/createorder', OrderController.CreateOrder);
 router.post('/razorpay', OrderController.razorpay); 
 router.post('/listorderdetailsbycustomer', OrderController.CustomerViewOrderDetails); 
 router.get('/listordersbycustomer', OrderController.ListOrdersbyCustomer); 
+router.get('/listallorders', OrderController.ListAllOrders); 
+router.post('/orderdetail',OrderController.OrderDetail);
 
 // Order Controller Functions for Vendors
 router.post('/updateorder', OrderController.UpdateOrder);
@@ -91,5 +97,14 @@ router.post('/updatepayment', OrderController.updatePayment);
 router.post('/addFaq', FaqController.addFaq);
 router.post('/deleteFaq', FaqController.deleteFaq);
 router.get('/listFaq', FaqController.listFaq);
+
+// Membership Controller Functions
+
+router.post('/addmembershipplan',MembershipController.addMembershipPlan);
+router.get('/viewmembershipplansbyadmin',MembershipController.viewMembershipPlansbyadmin);
+router.get('/viewmembershipplans',MembershipController.viewMembershipPlans);
+router.get('/getcurrentplan',MembershipController.getCurrentPlan);
+router.post('/subscribeplan',MembershipController.subscribePlan);
+router.post('/updatemembershipplan',MembershipController.updateMembershipplan);
 
 module.exports = router;

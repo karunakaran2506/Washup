@@ -81,46 +81,56 @@ const deleteBanner = async function (req, res) {
 
     const promise = new Promise(async function (resolve, reject) {
 
-        let isValidParams = req.headers.token;
+        let ValidParams = req.headers.token && req.body.bannerid;
 
-        if (isValidParams) {
-            try {
-                if (isValidParams) {
+        if (ValidParams) {
+            try{
+                let adminId = jwt.verify(req.headers.token, secret)
 
-                    await Banner.findOne({ _id: req.body.bannerId }).then((data) => {
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+                
+                if (checkAdmin) {
+                    try {
+                    await Banner.findOne({ _id: req.body.bannerid }).then((data) => {
                         fs.unlinkSync('./' + data.image);
                     })
 
-                    await Banner.deleteOne({ _id: req.body.bannerId }).then(async () => {
+                    await Banner.deleteOne({ _id: req.body.bannerid }).then(async () => {
                         resolve({ success: true, message: 'Banner deleted successfully' })
                     })
+
+                        resolve({ success: true, message: 'Success message' })
+                    } catch (error) {
+                        reject({ success: false, message: 'Failure message', error: error.message })
+                    }
                 }
                 else {
-                    reject({ success: false, message: "Please provide bannerId" })
+                    reject({ success: false, message: 'No admin found' })
                 }
-            } catch (e) {
-                console.log('Error in deletebanner', e)
-                reject({ success: false, message: 'Error occured while deleting banner', error: e })
+            }
+            catch{
+                reject({ success: false, message: 'Invalid token found' })
             }
         }
         else {
-            reject({ success: false, message: 'No valid token' })
+            reject({ success: false, message: 'Provide all valid data' })
         }
 
     });
 
     promise
 
-        .then(function (data) {
-            console.log('Inside then')
-            res.send({ success: data.success, message: data.message });
-
-        }).catch(function (error) {
-            console.log('Inside catch', error)
-            res.send({ success: error ? error.success : false, message: error ? error.message : 'Error occured while deleting banner' });
-        });
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message});
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message, error: error.error });
+        })
 
 }
+
 
 
 const viewBanners = async function (req, res) {
