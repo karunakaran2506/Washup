@@ -41,6 +41,15 @@ const CustomerSchema = new Schema({
         ref : 'membership',
         default:null
     },
+    gender : {
+        type : String,
+        default : null
+    },
+    district : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'districts',
+        required : true
+    },
     otp : {
         type : String,
         default : null

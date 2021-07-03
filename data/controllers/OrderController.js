@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const secret = 'washup123';
 const axios = require('axios');
 const Cartitem = require('../models/cartitems');
+const Customer = require('../models/customers');
 const Setting = require('./../models/settings');
 const CurrentMembership = require('../models/currentmembership');
 
@@ -47,6 +48,7 @@ const CreateOrder = async function (req, res) {
                             orderid: orderid,
                             cartid: req.body.cartid,
                             customer: customerId.id,
+                            address : req.body.address,
                             paymentmode: req.body.paymentmode,
                             paymentstatus: req.body.paymentstatus,
                             subtotal: subtotal,
@@ -99,6 +101,7 @@ const CreateOrder = async function (req, res) {
                                 orderid: orderid,
                                 cartid: req.body.cartid,
                                 customer: customerId.id,
+                                address : req.body.address,
                                 paymentmode: req.body.paymentmode,
                                 paymentstatus: req.body.paymentstatus,
                                 subtotal: subtotal,
@@ -283,14 +286,14 @@ const UpdateOrder = async function (req, res) {
                 if (checkAdmin) {
                     try {
 
-                        if (req.body.status == 'Cancelled') {
-                            let updateOrder = await Orders.updateOne({ _id: req.body.orderid }, {
+                        if (req.body.status === 'Cancelled') {
+                            let updateOrder = await Orders.updateOne({ orderid: req.body.orderid }, {
                                 $set: {
                                     orderstatus: req.body.status,
                                     isactive: false
                                 }
                             }).then(async (data) => {
-                                let findOrder = await Orders.findOne({ _id: req.body.orderid })
+                                let findOrder = await Orders.findOne({ orderid: req.body.orderid })
 
                                 console.log(findOrder);
 
@@ -303,19 +306,19 @@ const UpdateOrder = async function (req, res) {
                                 let findCustomer = await Customers.findOne({ _id: findOrder.customer })
 
                                 console.log(findCustomer);
+                                resolve({ success: true, message: 'Order status has been updated successfully' })
                                 
                             })
                         }
                         else {
-                            let updateOrder = await Orders.updateOne({ _id: req.body.orderid }, {
+                            let updateOrder = await Orders.updateOne({ orderid: req.body.orderid }, {
                                 $set: {
                                     orderstatus: req.body.status
                                 }
-                            }).then(async (data) => {
+                            }).then((data) => {
+                                resolve({ success: true, message: 'Order status has been updated successfully' })
                             })
-                        }
-
-                        resolve({ success: true, message: 'Order status has been updated successfully' })
+                        }                        
 
                     } catch (error) {
                         reject({ success: false, message: 'Error while updating order status', error: error.message })
@@ -525,7 +528,7 @@ const OrderDetail = async function (req, res) {
                 if (checkAdmin) {
                     try {
 
-                        let findOrders = await Orders.findOne({ orderid : req.body.orderid}).populate('customer')
+                        let findOrders = await Orders.findOne({ orderid : req.body.orderid}).populate('customer').populate('address')
 
                         .then(async(data)=>{
                         console.log('data',data);
@@ -547,6 +550,7 @@ const OrderDetail = async function (req, res) {
                             },
                             cartitems : cartitem,
                             customer : data.customer,
+                            address : data.address,
                             payment : {
                                 paymentmode : data.paymentmode,
                                 paymentstatus : data.paymentstatus,
@@ -594,6 +598,84 @@ const OrderDetail = async function (req, res) {
 
 }
 
+const dashboardDetails = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token;
+
+        if (ValidParams) {
+            try {
+                var result = {};
+                let adminId = jwt.verify(req.headers.token, secret)
+
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+
+                if (checkAdmin) {
+                    try {
+                        
+                        let totalordercount = await Orders.find({ orderstatus: {$ne: "Cancelled"} }).count();
+                        let totalcustomercount = await Customers.find({}).count();
+
+                        let totalPayment = await Orders.aggregate(
+                            [
+                                {
+                                    $match: { orderstatus: {$ne: "Cancelled"}, paymentstatus : { $in : ['Paid', 'Membership']} }
+                                },
+                                {
+                                    $group:
+                                    {
+                                        _id: 1,
+                                        sum: { $sum: '$totalamount' }
+                                    }
+                                }
+                            ]
+                        ).then((data) => {
+                            let sum = 0;
+                            if (data.length) {
+                                sum = data[0].sum + sum;
+                            }
+                            totalpay = sum;
+                        })
+
+                        result = {
+                            order : totalordercount,
+                            customer : totalcustomercount,
+                            payment : totalpay
+                        }
+                        
+                        resolve({ success: true, message: 'Success message', result: result })
+                    } catch (error) {
+                        reject({ success: false, message: 'Failure message', error: error.message })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No admin found' })
+                }
+            }
+            catch {
+                reject({ success: false, message: 'Invalid token found' })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid token' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message, result: data.result });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message, error: error.error });
+        })
+
+}
+
 module.exports = {
     CreateOrder,
     razorpay,
@@ -602,5 +684,6 @@ module.exports = {
     updatePayment,
     ListOrdersbyCustomer,
     ListAllOrders,
-    OrderDetail
+    OrderDetail,
+    dashboardDetails
 }

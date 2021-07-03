@@ -16,6 +16,11 @@ const OrderSchema = new Schema({
         ref: 'cartmodel',
         required: true
     },
+    address: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'address',
+        required: true
+    },
     customer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'customers',

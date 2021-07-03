@@ -100,6 +100,8 @@ const UserSignUp = async function (req, res) {
                     customertypeinfo2: req.body.customertypeinfo2,
                     customertype: req.body.customertype,
                     phone: req.body.phone,
+                    gender: req.body.gender,
+                    district: req.body.district,
                     password: hashedPassword
                 }).then(async (data) => {
                     let otp = otpGenerator.generate(4, { upperCase: false, specialChars: false, alphabets: false })
@@ -784,7 +786,9 @@ const Editprofile = async function (req, res) {
                     customertypeinfo1: req.body.customertypeinfo1,
                     customertypeinfo2: req.body.customertypeinfo2,
                     customertype: req.body.customertype,
-                    phone: req.body.phone
+                    phone: req.body.phone,
+                    gender: req.body.gender,
+                    district: req.body.district,
                 }
                 })
 

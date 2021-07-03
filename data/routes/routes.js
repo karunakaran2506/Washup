@@ -12,6 +12,8 @@ const CartController = require('../controllers/CartController');
 const OrderController = require('../controllers/OrderController');
 const FaqController = require('../controllers/FaqController');
 const MembershipController = require('../controllers/MembershipController');
+const DisctrictController = require('../controllers/DisctrictController');
+const AddressController = require('../controllers/AddressController')
 
 //Customer Controller Functions
 router.post('/customersignup',CustomerController.UserSignUp);
@@ -35,6 +37,7 @@ router.post('/adminsignup',AdminController.adminSignup);
 router.post('/adminlogin',AdminController.adminLogin); 
 router.post('/changepasswordadmin',AdminController.changePasswordadmin); 
 router.post('/checkuserotpadmin',AdminController.checkUserOtpadmin); 
+router.get('/dashboarddetails',OrderController.dashboardDetails); 
 
 //Staff Controller Functions
 router.post('/addstaff', StaffController.AddStaff);
@@ -106,5 +109,15 @@ router.get('/viewmembershipplans',MembershipController.viewMembershipPlans);
 router.get('/getcurrentplan',MembershipController.getCurrentPlan);
 router.post('/subscribeplan',MembershipController.subscribePlan);
 router.post('/updatemembershipplan',MembershipController.updateMembershipplan);
+
+// District Controller Functions
+router.post('/adddistrict', DisctrictController.addDistrict);
+router.post('/deletedistrict', DisctrictController.deleteDistrict);
+router.get('/listdistricts', DisctrictController.viewDistricts);
+
+// Address Controller functions
+router.post('/newAddress', AddressController.newAddress);
+router.post('/deleteAddress', AddressController.deleteAddress);
+router.get('/viewAddress', AddressController.viewAddress);
 
 module.exports = router;
