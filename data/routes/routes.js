@@ -64,6 +64,8 @@ router.post('/addservice',ServiceController.uploadImg, ServiceController.AddServ
 router.get('/viewservice', ServiceController.ViewService);
 router.get('/viewallservices', ServiceController.ViewAllServices);
 router.post('/updateservice', ServiceController.UpdateService);
+router.post('/editservice',ServiceController.uploadImg, ServiceController.EditService);
+router.post('/editservicewithoutimage', ServiceController.EditServicewithoutImage);
 
 // Product Controller functions
 
@@ -75,6 +77,8 @@ router.post('/updateproduct', ProductController.UpdateProduct);
 router.post('/addproduct',ProductController.uploadImg, ProductController.AddProduct);
 router.post('/updateproduct', ProductController.UpdateProduct);
 router.get('/viewallproducts',ProductController.ViewAllProducts)
+router.post('/editproduct',ProductController.uploadImg, ProductController.EditProduct);
+router.post('/editproductwithoutimage',ProductController.EditProductwithoutImage);
 
 // Cart Controller Functions
 router.post('/addtocart', CartController.AddtoCart);
@@ -109,6 +113,7 @@ router.get('/viewmembershipplans',MembershipController.viewMembershipPlans);
 router.get('/getcurrentplan',MembershipController.getCurrentPlan);
 router.post('/subscribeplan',MembershipController.subscribePlan);
 router.post('/updatemembershipplan',MembershipController.updateMembershipplan);
+router.post('/editmembershipplan',MembershipController.editMembershipplan);
 
 // District Controller Functions
 router.post('/adddistrict', DisctrictController.addDistrict);

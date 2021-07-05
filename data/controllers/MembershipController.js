@@ -370,11 +370,71 @@ const getCurrentPlan = async function (req, res) {
 
 }
 
+const editMembershipplan = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token && req.body.id;
+
+        if (ValidParams) {
+            try {
+                let adminId = jwt.verify(req.headers.token, secret)
+
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+
+                if (checkAdmin) {
+                    try {
+                        
+                        let updatePlan = await Membership.updateOne({ _id: req.body.id }, {
+                            $set: {
+                                name: req.body.name,
+                            price: req.body.price,
+                            points: req.body.points,
+                            description: req.body.description,
+                            }
+                        })
+                        .then((data)=>{
+                            resolve({ success: true, message: 'Membership plan has been edited successfully' })
+                        })
+                        
+                    } 
+                    catch (error) {
+                        reject({ success: false, message: error.message })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No admin found' })
+                }
+            }
+            catch {
+                reject({ success: false, message: 'Invalid token found' })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid token' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure');
+            res.send({ success: error.success, message: error.message, error: error.error });
+        })
+
+}
+
 module.exports = {
     getCurrentPlan,
     subscribePlan,
     addMembershipPlan,
     viewMembershipPlansbyadmin,
     viewMembershipPlans,
-    updateMembershipplan
+    updateMembershipplan,
+    editMembershipplan
 }

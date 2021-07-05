@@ -182,10 +182,117 @@ const UpdateService = async function (req, res) {
 
 }
 
+const EditService = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token && req.body.id;
+
+        if (ValidParams) {
+            try {
+                let adminId = jwt.verify(req.headers.token, secret)
+
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+
+                if (checkAdmin) {
+                    try {
+                        let editService = await Service.updateOne({ _id: req.body.id }, {
+                            $set: {
+                                name: req.body.name,
+                                image: req.file.path
+                            }
+                        })
+
+                        resolve({ success: true, message: 'Service edited successfully' })
+                    } catch (error) {
+                        reject({ success: false, message: 'Error while editing service', error: error.message })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No admin found' })
+                }
+            }
+            catch {
+                reject({ success: false, message: 'Invalid token found' })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid data' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure', error);
+            res.send({ success: error.success, message: error.message });
+        })
+
+}
+
+const EditServicewithoutImage = async function (req, res) {
+
+    const promise = new Promise(async function (resolve, reject) {
+
+        let ValidParams = req.headers.token && req.body.id;
+
+        if (ValidParams) {
+            try {
+                let adminId = jwt.verify(req.headers.token, secret)
+
+                let checkAdmin = await Admin.findOne({ _id: adminId.id })
+
+                if (checkAdmin) {
+                    try {
+                        let editService = await Service.updateOne({ _id: req.body.id }, {
+                            $set: {
+                                name: req.body.name
+                            }
+                        })
+
+                        resolve({ success: true, message: 'Service edited successfully' })
+                    } catch (error) {
+                        reject({ success: false, message: 'Error while editing service', error: error.message })
+                    }
+                }
+                else {
+                    reject({ success: false, message: 'No admin found' })
+                }
+            }
+            catch {
+                reject({ success: false, message: 'Invalid token found' })
+            }
+        }
+        else {
+            reject({ success: false, message: 'No valid data' })
+        }
+
+    });
+
+    promise
+
+        .then((data) => {
+            console.log('Inside then : Success')
+            res.send({ success: data.success, message: data.message });
+        })
+        .catch((error) => {
+            console.log('Inside Catch : Failure', error);
+            res.send({ success: error.success, message: error.message });
+        })
+
+}
+
 module.exports = {
     uploadImg,
     AddService,
     ViewService,
     UpdateService,
-    ViewAllServices
+    ViewAllServices,
+    EditService,
+    EditServicewithoutImage
 }
