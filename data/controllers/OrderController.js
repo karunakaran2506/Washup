@@ -9,6 +9,7 @@ const Cartitem = require('../models/cartitems');
 const Customer = require('../models/customers');
 const Setting = require('./../models/settings');
 const CurrentMembership = require('../models/currentmembership');
+const { razorpay_username, razorpay_secret } = require('../common/constants');
 
 const CreateOrder = async function (req, res) {
 
@@ -58,6 +59,8 @@ const CreateOrder = async function (req, res) {
                             orderstatus: 'Placed',
                             isactive: true
                         })
+
+                        console.log('createorder',createorder);
                         
                         if(req.body.paymentmode == 'membership'){
 
@@ -90,7 +93,7 @@ const CreateOrder = async function (req, res) {
                         }).then((data) => {
                             newcartid = data._id;
                         })
-                        resolve({ success: true, message: 'Order completed successfully', cart: newcartid })
+                        resolve({ success: true, message: 'Order completed successfully', cart: newcartid, order : createorder })
                     }
                     else {
                         if (req.body.razorpay_order_id) {
@@ -115,7 +118,9 @@ const CreateOrder = async function (req, res) {
                                 razorpay_signature: req.body.razorpay_signature,
                             })
 
-                            let updateCart = CartId.updateOne({ _id: req.body.cartid }, {
+                            console.log('createorder',createorder);
+
+                            let updateCart = await CartId.updateOne({ _id: req.body.cartid }, {
                                 $set: {
                                     is_active: 0
                                 }
@@ -130,7 +135,7 @@ const CreateOrder = async function (req, res) {
                             }).then((data) => {
                                 newcartid = data._id;
                             })
-                            resolve({ success: true, message: 'Order completed successfully', cart: newcartid })
+                            resolve({ success: true, message: 'Order completed successfully', cart: newcartid, order : createorder})
 
                         }
                         else {
@@ -157,7 +162,7 @@ const CreateOrder = async function (req, res) {
 
     .then((data) => {
         console.log('Inside then : Success')
-        res.send({ success: data.success, message: data.message, cart: data.cart });
+        res.send({ success: data.success, message: data.message, cart: data.cart, order : data.order});
     })
     .catch((error) => {
         console.log('Inside Catch : Failure', error);
@@ -181,8 +186,8 @@ const razorpay = async function (req, res) {
                 if (checkCustomers) {
 
                     var amount = req.body.amount * 100;
-                    var username = "rzp_test_MwvqBORSfCaaxV";
-                    var password = "19TcZpoeCWFQoFgvbRIA4bBu";
+                    var username = razorpay_username;
+                    var password = razorpay_secret;
                     var url = "https://api.razorpay.com/v1/orders?amount=" + amount + "&currency=INR&receipt=order_rcptid_11&payment_capture=1";
 
                     const result = await axios.post(url, {}, {

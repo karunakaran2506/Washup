@@ -6,6 +6,7 @@ const Admin = require('../models/admins');
 const bcrypt = require('bcrypt');
 const salt = bcrypt.genSaltSync(8);
 const jwt = require('jsonwebtoken');
+const { onesignalapp_id, restapikey } = require('../common/constants');
 const secret = 'washup123';
 
 const UserLogin = async function (req, res) {
@@ -277,7 +278,7 @@ const sendnotificationtoall = async function (req, res) {
     var sendNotification = function (data) {
         var headers = {
             "Content-Type": "application/json; charset=utf-8",
-            "Authorization": "Basic NzVkZDI1Y2QtZWZmYS00OWEzLThhNWMtOTFhMGE1ZTk3ZTAx"
+            "Authorization": `Basic ${restapikey}`
         };
 
         var options = {
@@ -306,8 +307,7 @@ const sendnotificationtoall = async function (req, res) {
     };
 
     var message = {
-        app_id: "fc339205-4f26-4d54-8293-82b0a5d95bd8",
-        android_channel_id : "2a812a1e-f315-4fd9-a891-c2dbd4ea3a93",
+        app_id: onesignalapp_id,
         headings : {"en": "Hellow Cart"},
         contents: { "en": req.body.message },
         included_segments: ["All"]
@@ -322,7 +322,7 @@ const sendnotificationtouser = async function (req, res) {
     var sendNotification = function (data) {
         var headers = {
             "Content-Type": "application/json; charset=utf-8",
-            "Authorization": "Basic NzVkZDI1Y2QtZWZmYS00OWEzLThhNWMtOTFhMGE1ZTk3ZTAx"
+            "Authorization": `Basic ${restapikey}`
         };
 
         var options = {
@@ -351,10 +351,9 @@ const sendnotificationtouser = async function (req, res) {
     };
 
     var message = {
-        app_id: "fc339205-4f26-4d54-8293-82b0a5d95bd8",
+        app_id: onesignalapp_id,
         headings : {"en": "Hellow Cart"},
         contents: { "en": req.body.message },
-        android_channel_id : "2a812a1e-f315-4fd9-a891-c2dbd4ea3a93",
         include_player_ids: [req.body.player_id]
     };
 
